@@ -4,7 +4,6 @@ const dns = require('dns').promises;
 const tls = require('tls');
 const net = require('net');
 const axios = require('axios');
-const { exec } = require('child_process');
 
 const app = express();
 app.use(cors());
@@ -19,13 +18,11 @@ async function getDNSRecords(domain) {
   return results;
 }
 
-// ─── WHOIS ───────────────────────────────────────
+// ─── WHOIS (CLOUD SAFE) ──────────────────────────
+// Removed exec('whois') → not available in Railway
 function getWhois(domain) {
-  return new Promise((resolve) => {
-    exec(`whois ${domain}`, (error, stdout) => {
-      if (error) return resolve({ error: error.message });
-      resolve({ raw: stdout.substring(0, 3000) });
-    });
+  return Promise.resolve({
+    raw: "WHOIS lookup disabled in cloud environment"
   });
 }
 
@@ -58,6 +55,10 @@ function getSSLCert(domain) {
       const cert = socket.getPeerCertificate();
       socket.end();
 
+      if (!cert || !cert.valid_to) {
+        return resolve({ error: 'No certificate' });
+      }
+
       const validTo = new Date(cert.valid_to);
       const now = new Date();
       const daysLeft = Math.floor((validTo - now) / (1000 * 60 * 60 * 24));
@@ -79,7 +80,7 @@ function getSSLCert(domain) {
 // ─── GEO ─────────────────────────────────────────
 async function getGeo(ip) {
   try {
-    const r = await axios.get(`http://ip-api.com/json/${ip}`);
+    const r = await axios.get(`http://ip-api.com/json/${ip}`, { timeout: 5000 });
     return r.data;
   } catch {
     return null;
@@ -159,12 +160,13 @@ app.post('/api/recon', async (req, res) => {
       securityHeaders,
       securityScore,
 
-      technologies: [],   // (future)
-      subdomains: [],     // (future)
-      robots: null        // (future)
+      technologies: [],
+      subdomains: [],
+      robots: null
     });
 
   } catch (err) {
+    console.error(err); // 👈 helpful for Railway logs
     res.status(500).json({ error: err.message });
   }
 });
