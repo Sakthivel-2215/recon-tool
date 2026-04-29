@@ -4,10 +4,16 @@ const dns = require('dns').promises;
 const tls = require('tls');
 const net = require('net');
 const axios = require('axios');
-const path = require('path'); // ✅ NEW
+const path = require('path');
 
 const app = express();
-app.use(cors());
+
+// ✅ Better CORS (important for deployed frontend)
+app.use(cors({
+  origin: '*',
+  methods: ['GET', 'POST'],
+}));
+
 app.use(express.json());
 
 // ─── DNS ─────────────────────────────────────────
@@ -19,7 +25,7 @@ async function getDNSRecords(domain) {
   return results;
 }
 
-// ─── WHOIS (CLOUD SAFE) ──────────────────────────
+// ─── WHOIS (Cloud-safe) ──────────────────────────
 function getWhois() {
   return Promise.resolve({
     raw: "WHOIS lookup disabled in cloud environment"
@@ -122,7 +128,7 @@ function analyzeHeaders(headers = {}) {
   }));
 }
 
-// ─── API ─────────────────────────────────────────
+// ─── API ROUTE ───────────────────────────────────
 app.post('/api/recon', async (req, res) => {
   const { domain } = req.body;
   if (!domain) return res.status(400).json({ error: 'Domain required' });
@@ -162,16 +168,27 @@ app.post('/api/recon', async (req, res) => {
     });
 
   } catch (err) {
-    console.error(err);
+    console.error("API ERROR:", err);
     res.status(500).json({ error: err.message });
   }
 });
 
-// ─── SERVE FRONTEND (🔥 IMPORTANT) ───────────────
-app.use(express.static(path.join(__dirname, 'public')));
+// ─── HEALTH CHECK (🔥 IMPORTANT FOR RAILWAY) ─────
+app.get('/health', (req, res) => {
+  res.status(200).send("OK");
+});
 
+// ─── SERVE FRONTEND ──────────────────────────────
+const publicPath = path.join(__dirname, 'public');
+
+app.use(express.static(publicPath));
+
+// ⚠️ DO NOT break API routes
 app.get('*', (req, res) => {
-  res.sendFile(path.join(__dirname, 'public', 'index.html'));
+  if (req.path.startsWith('/api')) {
+    return res.status(404).json({ error: 'API route not found' });
+  }
+  res.sendFile(path.join(publicPath, 'index.html'));
 });
 
 // ─── SERVER ───────────────────────────────────────
