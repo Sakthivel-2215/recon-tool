@@ -8,13 +8,19 @@ const path = require('path');
 
 const app = express();
 
-// ✅ Better CORS (important for deployed frontend)
-app.use(cors({
-  origin: '*',
-  methods: ['GET', 'POST'],
-}));
-
+// ✅ CORS
+app.use(cors({ origin: '*' }));
 app.use(express.json());
+
+// ─── HEALTH CHECK (Railway) ──────────────────────
+app.get('/health', (req, res) => {
+  res.status(200).send('OK');
+});
+
+// ─── ROOT CHECK ──────────────────────────────────
+app.get('/', (req, res) => {
+  res.send('🚀 Backend Running');
+});
 
 // ─── DNS ─────────────────────────────────────────
 async function getDNSRecords(domain) {
@@ -25,10 +31,10 @@ async function getDNSRecords(domain) {
   return results;
 }
 
-// ─── WHOIS (Cloud-safe) ──────────────────────────
+// ─── WHOIS ───────────────────────────────────────
 function getWhois() {
   return Promise.resolve({
-    raw: "WHOIS lookup disabled in cloud environment"
+    raw: "WHOIS disabled in cloud"
   });
 }
 
@@ -48,6 +54,7 @@ async function getHTTPInfo(domain) {
       headers: res.headers,
       finalUrl: res.request?.res?.responseUrl
     };
+
   } catch {
     return { error: 'HTTP failed' };
   }
@@ -128,7 +135,7 @@ function analyzeHeaders(headers = {}) {
   }));
 }
 
-// ─── API ROUTE ───────────────────────────────────
+// ─── MAIN API ─────────────────────────────────────
 app.post('/api/recon', async (req, res) => {
   const { domain } = req.body;
   if (!domain) return res.status(400).json({ error: 'Domain required' });
@@ -173,34 +180,17 @@ app.post('/api/recon', async (req, res) => {
   }
 });
 
-// ─── HEALTH CHECK (🔥 IMPORTANT FOR RAILWAY) ─────
-app.get('/health', (req, res) => {
-  res.status(200).send("OK");
-});
-
 // ─── SERVE FRONTEND ──────────────────────────────
 const publicPath = path.join(__dirname, 'public');
+console.log("📂 Serving frontend from:", publicPath);
 
 app.use(express.static(publicPath));
 
-// ⚠️ DO NOT break API routes
+// React fallback (AFTER API)
 app.get('*', (req, res) => {
-  if (req.path.startsWith('/api')) {
-    return res.status(404).json({ error: 'API route not found' });
-  }
   res.sendFile(path.join(publicPath, 'index.html'));
 });
 
-app.get('/', (req, res) => {
-  res.send('🚀 Recon Tool Backend Running');
-});
-
-app.get('/health', (req, res) => {
-  res.status(200).send('OK');
-});
-
-
-app.post('/api/recon')
 // ─── SERVER ───────────────────────────────────────
 const PORT = process.env.PORT || 3001;
 
