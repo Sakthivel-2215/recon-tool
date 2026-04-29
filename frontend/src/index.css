@@ -1,0 +1,75 @@
+:root {
+  --bg: #080c10;
+  --bg2: #0d1117;
+  --bg3: #111820;
+  --border: #1e3a2f;
+  --border2: #0f2a20;
+  --green: #00ff87;
+  --green2: #00c864;
+  --green3: #006e36;
+  --cyan: #00e5ff;
+  --yellow: #ffd60a;
+  --red: #ff4560;
+  --orange: #ff9f43;
+  --text: #c8e6d0;
+  --text2: #7aad88;
+  --text3: #3d6b4a;
+  --mono: 'Share Tech Mono', monospace;
+  --display: 'Rajdhani', sans-serif;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--mono);
+  min-height: 100vh;
+  overflow-x: hidden;
+}
+
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  background: 
+    repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(0,255,135,0.015) 2px, rgba(0,255,135,0.015) 4px);
+  pointer-events: none;
+  z-index: 0;
+}
+
+::-webkit-scrollbar { width: 6px; }
+::-webkit-scrollbar-track { background: var(--bg2); }
+::-webkit-scrollbar-thumb { background: var(--green3); border-radius: 3px; }
+
+.glow { text-shadow: 0 0 10px var(--green), 0 0 30px rgba(0,255,135,0.3); }
+.glow-cyan { text-shadow: 0 0 10px var(--cyan), 0 0 20px rgba(0,229,255,0.3); }
+
+@keyframes scanline {
+  0% { transform: translateY(-100%); }
+  100% { transform: translateY(100vh); }
+}
+
+@keyframes blink {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0; }
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(12px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes pulse-border {
+  0%, 100% { border-color: var(--border); }
+  50% { border-color: var(--green3); }
+}
+
+@keyframes progress-fill {
+  from { width: 0%; }
+  to { width: 100%; }
+}
+
+.fade-in {
+  animation: fadeIn 0.4s ease forwards;
+}
