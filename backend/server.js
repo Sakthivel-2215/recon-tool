@@ -4,6 +4,7 @@ const dns = require('dns').promises;
 const tls = require('tls');
 const net = require('net');
 const axios = require('axios');
+const path = require('path'); // ✅ NEW
 
 const app = express();
 app.use(cors());
@@ -19,8 +20,7 @@ async function getDNSRecords(domain) {
 }
 
 // ─── WHOIS (CLOUD SAFE) ──────────────────────────
-// Removed exec('whois') → not available in Railway
-function getWhois(domain) {
+function getWhois() {
   return Promise.resolve({
     raw: "WHOIS lookup disabled in cloud environment"
   });
@@ -42,7 +42,6 @@ async function getHTTPInfo(domain) {
       headers: res.headers,
       finalUrl: res.request?.res?.responseUrl
     };
-
   } catch {
     return { error: 'HTTP failed' };
   }
@@ -123,7 +122,7 @@ function analyzeHeaders(headers = {}) {
   }));
 }
 
-// ─── MAIN API ─────────────────────────────────────
+// ─── API ─────────────────────────────────────────
 app.post('/api/recon', async (req, res) => {
   const { domain } = req.body;
   if (!domain) return res.status(400).json({ error: 'Domain required' });
@@ -149,26 +148,30 @@ app.post('/api/recon', async (req, res) => {
       domain: clean,
       ip,
       timestamp: new Date().toISOString(),
-
       dns: dnsData,
       whois,
       http,
       ssl,
       geo,
       openPorts: ports,
-
       securityHeaders,
       securityScore,
-
       technologies: [],
       subdomains: [],
       robots: null
     });
 
   } catch (err) {
-    console.error(err); // 👈 helpful for Railway logs
+    console.error(err);
     res.status(500).json({ error: err.message });
   }
+});
+
+// ─── SERVE FRONTEND (🔥 IMPORTANT) ───────────────
+app.use(express.static(path.join(__dirname, 'public')));
+
+app.get('*', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
 
 // ─── SERVER ───────────────────────────────────────

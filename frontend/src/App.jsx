@@ -382,10 +382,7 @@ export default function App() {
   setError(null)
 
   try {
-    // ✅ Use env OR fallback to Railway backend URL
-    const API_URL = import.meta.env.VITE_API_URL || "https://recon-tool-production.up.railway.app"
-
-    const res = await fetch(`${API_URL}/api/recon`, {
+    const res = await fetch('/api/recon', {   // ✅ LOCAL API
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ domain: target }),
