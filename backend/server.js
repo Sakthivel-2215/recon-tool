@@ -187,6 +187,20 @@ console.log("📂 Serving frontend from:", publicPath);
 app.use(express.static(publicPath));
 
 // React fallback (AFTER API)
+// ─── HEALTH ─────────────────────────
+app.get('/health', (req, res) => {
+  res.status(200).send('OK');
+});
+
+// ─── ROOT (CRITICAL FIX) ────────────
+app.get('/', (req, res) => {
+  res.send('🚀 App is LIVE');
+});
+
+// ─── SERVE STATIC ───────────────────
+app.use(express.static(publicPath));
+
+// ─── FRONTEND FALLBACK ──────────────
 app.get('*', (req, res) => {
   res.sendFile(path.join(publicPath, 'index.html'));
 });
