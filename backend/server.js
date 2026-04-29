@@ -191,6 +191,16 @@ app.get('*', (req, res) => {
   res.sendFile(path.join(publicPath, 'index.html'));
 });
 
+app.get('/', (req, res) => {
+  res.send('🚀 Recon Tool Backend Running');
+});
+
+app.get('/health', (req, res) => {
+  res.status(200).send('OK');
+});
+
+
+app.post('/api/recon')
 // ─── SERVER ───────────────────────────────────────
 const PORT = process.env.PORT || 3001;
 
