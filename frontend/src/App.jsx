@@ -374,26 +374,35 @@ export default function App() {
   const inputRef = useRef(null)
 
   const runScan = async () => {
-    const target = domain.trim()
-    if (!target) return
-    setLoading(true)
-    setResult(null)
-    setError(null)
-    try {
-      const res = await fetch('/api/recon', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ domain: target }),
-      })
-      const data = await res.json()
-      if (!res.ok) throw new Error(data.error || 'Scan failed')
-      setResult(data)
-    } catch (e) {
-      setError(e.message)
-    } finally {
-      setLoading(false)
-    }
+  const target = domain.trim()
+  if (!target) return
+
+  setLoading(true)
+  setResult(null)
+  setError(null)
+
+  try {
+    // ✅ Use env OR fallback to Railway backend URL
+    const API_URL = import.meta.env.VITE_API_URL || "https://recon-tool-production.up.railway.app"
+
+    const res = await fetch(`${API_URL}/api/recon`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ domain: target }),
+    })
+
+    const data = await res.json()
+
+    if (!res.ok) throw new Error(data.error || 'Scan failed')
+
+    setResult(data)
+
+  } catch (e) {
+    setError(e.message)
+  } finally {
+    setLoading(false)
   }
+}
 
   const handleKey = (e) => { if (e.key === 'Enter') runScan() }
 
